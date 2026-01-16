@@ -1,16 +1,229 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Flask Site</title>
+    <title>Shop Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+
+        #game-area {
+            width: 800px;
+            height: 600px;
+            margin: 0 auto;
+            position: relative;
+            background-color: #cfcfcf;
+            border: 2px solid #000;
+        }
+
+        /* Player for first area (blue square) */
+        #player {
+            width: 50px;
+            height: 50px;
+            background-color: blue;
+            position: absolute;
+            top: 275px;
+            left: 375px;
+        }
+
+        /* Player PNG for second area */
+        #player-img {
+            width: 50px;
+            height: 50px;
+            position: absolute;
+            display: none;
+        }
+
+        .shop-item {
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            position: absolute;
+        }
+
+        #continue-btn, #return-btn {
+            margin: 10px auto;
+            display: block;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
 
-<h1>Welcome!</h1>
+<h1 style="text-align:center;">Shop Game</h1>
 
-<audio autoplay loop>
-    <source src="{{ url_for('static', filename='music/deltarune/shop1.ogg') }}" type="audio/ogg">
-    Your browser does not support audio.
-</audio>
+<button id="continue-btn">Continue</button>
+<button id="return-btn" style="display:none;">Return to previous area</button>
+
+<div id="game-area">
+    <!-- First area -->
+    <div id="player"></div>
+    <div class="shop-item" style="top:100px; left:100px;"></div>
+    <div class="shop-item" style="top:400px; left:600px;"></div>
+
+    <!-- Second area -->
+    <img id="player-img" src="images/player.png"> <!-- PNG from workspace -->
+</div>
+
+<script>
+
+const gameArea = document.getElementById("game-area");
+const player = document.getElementById("player");
+const playerImg = document.getElementById("player-img");
+const continueBtn = document.getElementById("continue-btn");
+const returnBtn = document.getElementById("return-btn");
+
+// Player position
+let posX = 375;
+let posY = 275;
+let speed = 3.5;
+let isMusicPlaying = false;
+
+// Current area: 1 = first, 2 = second
+let currentArea = 1;
+
+
+// Track keys pressed
+let keysPressed = {};
+let audio = new Audio('/static/music/shop1.ogg'); 
+let area1 = new Audio('/static/music/area1.ogg')
+// Area 2 music
+
+
+// Key events
+document.addEventListener("keydown", (e) => {
+    keysPressed[e.key.toLowerCase()] = true;
+});
+
+document.addEventListener("keyup", (e) => {
+    keysPressed[e.key.toLowerCase()] = false;
+});
+
+// Update buttons visibility
+function musicPlayer() { 
+    if(currentArea === 1) {
+        area1.loop = true;
+        area1.volume = 0.7;
+        area1.play()
+        isMusicPlaying = true;
+    }
+    else if(currentArea !== 1) {
+        area1.volume = 0;
+        area1.pause();
+        isMusicPlaying = false;
+        area1.currentTime = 0;
+    }
+    if(currentArea === 2) { 
+        audio.loop = true; // Loop indefinitely 
+        audio.volume = 0.5; // Set volume (0.0 to 1.0) 
+        audio.play(); 
+        isMusicPlaying = true; 
+    }
+    else if(currentArea !== 2) {
+        audio.volume = 0;
+        audio.pause();
+        isMusicPlaying = false;      // stops playback
+        audio.currentTime = 0;
+    } 
+}
+
+function updateButtons() {
+    if(currentArea === 1) {
+        continueBtn.style.display = "block";
+        returnBtn.style.display = "none";
+    } else {
+        continueBtn.style.display = "none";
+        returnBtn.style.display = "block";
+    }
+}
+
+// Move player
+function movePlayer() {
+    if(keysPressed["w"]) posY -= speed;
+    if(keysPressed["s"]) posY += speed;
+    if(keysPressed["a"]) posX -= speed;
+    if(keysPressed["d"]) posX += speed;
+
+    // Keep player inside game area
+    posX = Math.max(0, Math.min(gameArea.clientWidth - 50, posX));
+    posY = Math.max(0, Math.min(gameArea.clientHeight - 50, posY));
+
+    if(currentArea === 1){
+        speed = 5;
+        player.style.left = posX + "px";
+        player.style.top = posY + "px";
+    } else if(currentArea === 2){
+        if(!isMusicPlaying) {
+            musicPlayer();
+        }
+        speed = 2.5;
+        playerImg.style.left = posX + "px";
+        playerImg.style.top = posY + "px";
+
+        // Play music once
+        if(!isMusicPlaying){
+            area2Music.play();
+            isMusicPlaying = true;
+        }
+    }
+
+    updateButtons();
+    requestAnimationFrame(movePlayer);
+}
+
+// Start movement loop
+musicPlayer();
+movePlayer();
+
+// Continue button click → go to Area 2
+continueBtn.addEventListener("click", () => {
+    player.style.display = "none";
+    playerImg.style.display = "block";
+
+    posX = 100;
+    posY = 100;
+    playerImg.style.left = posX + "px";
+    playerImg.style.top = posY + "px";
+
+    gameArea.style.backgroundColor = "#aaffaa";
+    currentArea = 2;
+
+    updateButtons();
+});
+
+// Return button click → go back to Area 1
+returnBtn.addEventListener("click", () => {
+    if(currentArea !== 1){
+         // resets to the start
+         document.querySelectorAll("audio").forEach(aud => {
+        aud.pause();
+        aud.currentTime = 0;
+    });
+
+        player.style.display = "block";
+        playerImg.style.display = "none";
+
+        posX = 375;
+        posY = 275;
+        player.style.left = posX + "px";
+        player.style.top = posY + "px";
+
+        gameArea.style.backgroundColor = "#cfcfcf";
+        currentArea = 1;
+
+        // Stop Area 2 music
+        musicPlayer();
+        isMusicPlaying = false;
+
+        updateButtons();
+    }
+});
+
+
+</script>
 
 </body>
 </html>
