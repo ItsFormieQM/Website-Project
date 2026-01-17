@@ -140,7 +140,75 @@ function updateButtons() {
     }
 }
 
+let joystickPosX = 0;
+let joystickPosY = 0;
+
+const thumb = document.getElementById("joystick-thumb");
+const container = document.getElementById("joystick-container");
+
+container.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = container.getBoundingClientRect();
+
+    // Calculate relative position inside container
+    let x = touch.clientX - rect.left - rect.width/2;
+    let y = touch.clientY - rect.top - rect.height/2;
+
+    // Clamp to joystick radius
+    const maxRadius = rect.width/2 - thumb.offsetWidth/2;
+    const angle = Math.atan2(y, x);
+    const distance = Math.min(maxRadius, Math.hypot(x, y));
+    x = distance * Math.cos(angle);
+    y = distance * Math.sin(angle);
+
+    // Move thumb
+    thumb.style.left = `${rect.width/2 - thumb.offsetWidth/2 + x}px`;
+    thumb.style.top = `${rect.height/2 - thumb.offsetHeight/2 + y}px`;
+
+    joystickPosX = x / maxRadius; // normalized -1 to 1
+    joystickPosY = y / maxRadius; // normalized -1 to 1
+});
+
+container.addEventListener("touchend", () => {
+    // Reset thumb and movement
+    joystickPosX = 0;
+    joystickPosY = 0;
+    thumb.style.left = "50px";
+    thumb.style.top = "50px";
+});
+
 // Move player
+
+function gameLoop() {
+    if(!isMobile) {
+        // WASD movement for desktop
+        if(keysPressed["w"]) posY -= speed;
+        if(keysPressed["s"]) posY += speed;
+        if(keysPressed["a"]) posX -= speed;
+        if(keysPressed["d"]) posX += speed;
+    } else {
+        // Mobile joystick movement
+        posX += joystickPosX * speed;
+        posY += joystickPosY * speed;
+    }
+
+    // Keep inside game area
+    posX = Math.max(0, Math.min(gameArea.clientWidth - 50, posX));
+    posY = Math.max(0, Math.min(gameArea.clientHeight - 50, posY));
+
+    // Update player
+    if(currentArea === 1) {
+        player.style.left = posX + "px";
+        player.style.top = posY + "px";
+    } else {
+        playerImg.style.left = posX + "px";
+        playerImg.style.top = posY + "px";
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
 function movePlayer() {
     if(keysPressed["w"]) posY -= speed;
     if(keysPressed["s"]) posY += speed;
@@ -176,7 +244,7 @@ function movePlayer() {
 
 // Start movement loop
 musicPlayer();
-movePlayer();
+gameLoop();
 
 // Continue button click → go to Area 2
 continueBtn.addEventListener("click", () => {
