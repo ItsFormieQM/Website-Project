@@ -96,7 +96,13 @@
   <!-- UNDERTALE DIALOG -->
 <!-- INTRO SCREEN -->
 <!-- INTRO SCREEN -->
-<div id="intro-screen" class="dialogue">
+<!-- LOADING SCREEN -->
+<div id="loading-screen" class="dialogue">
+  <p>* Loading… please wait.</p>
+</div>
+
+<!-- INTRO SCREEN (hidden initially) -->
+<div id="intro-screen" class="dialogue" style="display:none;">
   <p>* Welcome to the game!</p>
   <button id="continue-btn">* CONTINUE *</button>
 </div>
@@ -117,6 +123,7 @@
     </div>
   </div>
 </div>
+
 
 
   <!-- MAIN CONTENT -->
@@ -142,6 +149,17 @@ continueBtn.addEventListener("click", () => {
   // Optional: play menu music now
   playMenuMUS();
 });
+window.addEventListener("load", () => {
+  // Everything (images, audio, CSS) is fully loaded now
+  const loadingScreen = document.getElementById("loading-screen");
+  const introScreen = document.getElementById("intro-screen");
+
+  // Hide the loading screen
+  loadingScreen.style.display = "none";
+
+  // Show the intro screen
+  introScreen.style.display = "block";
+});
 
 
 let area = 1;
@@ -159,8 +177,6 @@ function playMenuMUS() {
     menuMUS.loop = true;
     menuMUS.play();
 }
-
-
 
 const choices = document.querySelectorAll(".choice");
 
