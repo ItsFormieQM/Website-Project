@@ -43,22 +43,26 @@ resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
 // ---------- PLAYER SETUP ----------
+const playerImg = new Image();
+playerImg.src = "sprites/redsoul.png"; // initial player image
+
 const player = {
   x: canvas.width / 2,
   y: canvas.height / 2,
-  size: 32,
-  color: "red",
-  speed: 5
+  size: 24,
+  speed: 3.5,
+  img: playerImg  // store image in object
 };
+
+// ---------- FUNCTION TO CHANGE PLAYER IMAGE ----------
+function changePlayerImage(newSrc) {
+  player.img.src = newSrc;
+}
 
 // ---------- KEYBOARD INPUT ----------
 const keys = {};
-window.addEventListener("keydown", e => {
-  keys[e.key.toLowerCase()] = true;
-});
-window.addEventListener("keyup", e => {
-  keys[e.key.toLowerCase()] = false;
-});
+window.addEventListener("keydown", e => { keys[e.key.toLowerCase()] = true; });
+window.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
 
 // ---------- POINTER INPUT (MOUSE + TOUCH) ----------
 let pointerDown = false;
@@ -87,8 +91,6 @@ canvas.addEventListener("pointermove", e => {
 function gameLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Keyboard movement (WASD)
-
   // Pointer movement (drag toward touch/mouse)
   if (pointerDown) {
     const dx = pointerPos.x - (player.x + player.size / 2);
@@ -102,14 +104,19 @@ function gameLoop() {
   player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
   player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
 
-  // Draw player (red soul placeholder)
-  ctx.fillStyle = player.color;
-  ctx.fillRect(player.x, player.y, player.size, player.size);
+  // Draw player image
+  ctx.drawImage(player.img, player.x, player.y, player.size, player.size);
 
   requestAnimationFrame(gameLoop);
 }
 
 gameLoop();
+
+// ---------- EXAMPLE: CHANGE IMAGE AFTER 2 SECONDS ----------
+setTimeout(() => {
+  changePlayerImage("/static/sprites/red.png");
+}, 0);
+
 </script>
 </body>
 </html>

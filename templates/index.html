@@ -11,7 +11,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: "Determination Sans";
+      font-family: "Determination Sans", sans-serif;
       image-rendering: pixelated;
     }
 
@@ -25,21 +25,13 @@
     }
 
     /* ===== DIALOG BOX ===== */
-    #platform-selector {
-      position: fixed;
-      inset: 0;
-      background: black;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
     .dialogue {
       width: 90%;
       max-width: 600px;
       border: 4px solid white;
       padding: 24px;
       font-size: 18px;
+      text-align: center;
     }
 
     .dialogue p {
@@ -50,38 +42,39 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      margin-top: 16px;
     }
 
     .choice {
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px; /* space between pointer and text */
+      gap: 6px;
       padding: 4px 0;
+      transition: color 0.1s;
     }
 
-    /* Pointer image hidden by default */
-    .choice .pointer {
+    .choice:hover {
+      color: yellow;
+    }
+
+    .pointer {
       width: 16px;
       height: 16px;
       image-rendering: pixelated;
-      visibility: hidden;
+      display: inline-block;
     }
 
-    /* Show pointer on hover */
-    .choice:hover .pointer {
-      visibility: visible;
+    /* Twitch effect for individual letters */
+    .twitch span {
+      display: inline-block;
+      transition: transform 0.05s;
     }
 
     /* ===== MAIN CONTENT ===== */
     #content {
       display: none;
       text-align: center;
-    }
-
-    #twitch-text span {
-      display: inline-block;
-      transition: transform 0.05s; /* smooth twitch */
     }
 
     body.pc #content,
@@ -93,167 +86,149 @@
     body.mobile #platform-selector {
       display: none;
     }
+
   </style>
 </head>
 
 <body>
 
-  <!-- UNDERTALE DIALOG -->
-<!-- INTRO SCREEN -->
-<!-- INTRO SCREEN -->
-<!-- LOADING SCREEN -->
-<div id="loading-screen" class="dialogue">
-  <p>* Loading… please wait.</p>
-</div>
-
-<!-- INTRO SCREEN (hidden initially) -->
-<div id="intro-screen" class="dialogue" style="display:none;">
-  <p id="twitch-text">Are you sure that you want to continue?</p>
-  <button id="continue-btn">CONTINUE</button>
-</div>
-
-<!-- PLATFORM SELECTOR (hidden initially) -->
-<div id="platform-selector" class="dialogue" style="display:none;">
-  <p id="twitch-text">* Before you continue.</p>
-  <p id="twitch-text">* Please choose the platform you are using:</p>
-
-  <div class="choices">
-  <div class="choice" onclick="window.location.href='{{ url_for('pc') }}'">
-    <img class="pointer" src="{{ url_for('static', filename='sprites/redsoul.png') }}" alt="pointer">
-    PC
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen" class="dialogue">
+    <p>* Loading… please wait.</p>
   </div>
 
-  <div class="choice" onclick="window.location.href='{{ url_for('mobile') }}'">
-    <img class="pointer" src="{{ url_for('static', filename='sprites/redsoul.png') }}" alt="pointer">
-    MOBILE
-  </div>
-</div>
-
-
-
-
-  <!-- MAIN CONTENT -->
-  <div id="content">
-    <h1>* Welcome.</h1>
-    <p>* Your journey begins.</p>
-    <br>
-    <button onclick="resetPlatform()">RESET</button>
+  <!-- INTRO SCREEN -->
+  <div id="intro-screen" class="dialogue" style="display:none;">
+    <p id="intro-text" class="twitch">Are you sure that you want to continue?</p>
+    <button id="continue-btn" onclick="playMenuMUS(); playMenuSelectSFX();">CONTINUE</button>
   </div>
 
- <script>
-const continueBtn = document.getElementById("continue-btn");
-const introScreen = document.getElementById("intro-screen");
-const platformSelector = document.getElementById("platform-selector");
+  <!-- PLATFORM SELECTOR -->
+  <div id="platform-selector" class="dialogue" style="display:none;">
+    <p>* Before you continue.</p>
+    <p>* Please choose the platform you are using:</p>
 
-const textElement = document.getElementById('twitch-text');
-const text = textElement.textContent;
-textElement.textContent = ''; // clear original text
+    <div class="choices">
+      <div class="choice twitch" onclick="goToPlatform('pc')">
+        <img class="pointer" src="{{ url_for('static', filename='sprites/redsoul.png') }}" alt="pointer" width="16" height="16">
+        PC
+      </div>
 
-// wrap each character in a span
-for (let char of text) {
-    const span = document.createElement('span');
-    span.textContent = char;
-    textElement.appendChild(span);
-}
+      <div class="choice twitch" onclick="goToPlatform('mobile')">
+        <img class="pointer" src="{{ url_for('static', filename='sprites/redsoul.png') }}" alt="pointer" width="16" height="16">
+        MOBILE
+      </div>
+    </div>
+  </div>
 
-const letters = textElement.querySelectorAll('span');
-
-function twitchLetters() {
-    letters.forEach(span => {
-        const maxOffset = 1.2; // pixels of twitch
-        const x = Math.floor(Math.random() * (maxOffset * 2 + 1)) - maxOffset;
-        const y = Math.floor(Math.random() * (maxOffset * 2 + 1)) - maxOffset;
-        span.style.transform = `translate(${x}px, ${y}px)`;
+  <script>
+    // ===== LOADING SCREEN =====
+    window.addEventListener("load", () => {
+      document.getElementById("loading-screen").style.display = "none";
+      document.getElementById("intro-screen").style.display = "block";
+      startTwitch("intro-text");
     });
-}
 
-// update every 50ms for fast twitch
-setInterval(twitchLetters, 50);
+    // ===== TWITCH EFFECT =====
+    function startTwitch(elementId) {
+      const el = document.getElementById(elementId) || document.querySelector(`#${elementId}`);
+      if (!el) return;
 
-continueBtn.addEventListener("click", () => {
-  // Hide intro screen
-  introScreen.style.display = "none";
+      // Wrap each character in a span
+      const text = el.textContent;
+      el.textContent = '';
+      for (let char of text) {
+        const span = document.createElement('span');
+        span.textContent = char;
+        el.appendChild(span);
+      }
 
-  // Show platform selector
-  platformSelector.style.display = "block";
-
-  // Optional: play menu music now
-  playMenuMUS();
-});
-window.addEventListener("load", () => {
-  // Everything (images, audio, CSS) is fully loaded now
-  const loadingScreen = document.getElementById("loading-screen");
-  const introScreen = document.getElementById("intro-screen");
-
-  // Hide the loading screen
-  loadingScreen.style.display = "none";
-
-  // Show the intro screen
-  introScreen.style.display = "block";
-});
-
-
-let area = 1;
-
-function playMenuMoveSFX() {
-    let menuMvSFX = new Audio("/static/sfx/snd_menumove.wav");
-    menuMvSFX.volume = 0.7;
-    menuMvSFX.loop = false;
-    menuMvSFX.play();
-}
-
-function playMenuMUS() {
-    let menuMUS = new Audio("/static/music/menu.ogg");
-    menuMUS.volume = 1;
-    menuMUS.loop = true;
-    menuMUS.play();
-}
-
-const choices = document.querySelectorAll(".choice");
-
-choices.forEach(choice => {
-  choice.addEventListener("mouseenter", () => {
-    const pointer = choice.querySelector(".pointer");
-    if (!pointer) return;
-
-    const style = window.getComputedStyle(pointer);
-
-    if (style.visibility === "visible") {
-      playMenuMoveSFX(); // Calls your external function
+      const letters = el.querySelectorAll('span');
+      setInterval(() => {
+        letters.forEach(span => {
+          const x = Math.floor(Math.random() * 3) - 1;
+          const y = Math.floor(Math.random() * 3) - 1;
+          span.style.transform = `translate(${x}px, ${y}px)`;
+        });
+      }, 50);
     }
-  });
-});
 
+    // Apply twitch to all elements with class 'twitch' (platform buttons)
+    document.querySelectorAll(".twitch").forEach(el => {
+      // Wrap each character in a span
+      const text = el.textContent;
+      el.textContent = '';
+      for (let char of text) {
+        const span = document.createElement('span');
+        span.textContent = char;
+        el.appendChild(span);
+      }
+      const letters = el.querySelectorAll('span');
+      setInterval(() => {
+        letters.forEach(span => {
+          const x = Math.floor(Math.random() * 3) - 1;
+          const y = Math.floor(Math.random() * 3) - 1;
+          span.style.transform = `translate(${x}px, ${y}px)`;
+        });
+      }, 50);
+    });
+
+    // ===== CONTINUE BUTTON =====
+    document.getElementById("continue-btn").addEventListener("click", () => {
+      document.getElementById("intro-screen").style.display = "none";
+      document.getElementById("platform-selector").style.display = "block";
+      playMenuMoveSFX();
+    });
+
+    // ===== SOUND =====
+    function playMenuMoveSFX() {
+      let sfx = new Audio("/static/sfx/snd_menumove.wav");
+      sfx.volume = 0.7;
+      sfx.play();
+    }
+
+    function playMenuSelectSFX() {
+      let select = new Audio("/static/sfx/snd_select.wav");
+      select.volume = 1;
+      select.play();
+    }
+    function playMenuMUS() {
+      let mus = new Audio("/static/music/menu.ogg");
+      mus.volume = 1;
+      mus.loop = true;
+      mus.play();
+    }
+
+    // Play SFX on hover for choices
+    document.querySelectorAll(".choice").forEach(choice => {
+      choice.addEventListener("mouseenter", playMenuMoveSFX);
+    });
+
+    // ===== PLATFORM LOGIC =====
     const saved = localStorage.getItem("platform");
+    function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-    if (saved) {
-      document.body.classList.add(saved);
-    }
+async function goToPlatform(platform) {
+  playMenuSelectSFX();
 
-    function setPlatform(platform) {
-      localStorage.setItem("platform", platform);
-      document.body.classList.add(platform);
-    }
+  await sleep(200); // 200 milliseconds = 0.2 seconds
 
+  localStorage.setItem("platform", platform);
+
+  if (platform === 'pc') {
+    window.location.href = "pc.html";
+  } else if (platform === 'mobile') {
+    window.location.href = "mobile.html";
+
+  }
+}
     function resetPlatform() {
       localStorage.removeItem("platform");
       location.reload();
     }
 
-function goToPlatform(platform) {
-    localStorage.setItem("platform", platform); // optional, save selection
-
-    if(platform === 'pc') {
-        // stay on current page or load PC-specific content
-        document.body.classList.add('pc');
-        document.getElementById('platform-selector').style.display = 'none';
-        document.getElementById('content').style.display = 'block';
-    } else if(platform === 'mobile') {
-        // go to a separate HTML file for mobile
-        window.location.href = "mobile.html"; // <-- path to your mobile page
-    }
-}
   </script>
-
 </body>
 </html>
