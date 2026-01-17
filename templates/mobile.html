@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deltarune?</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "DETERMINATION SANS", monospace;
+    }
+
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: black;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .game-container {
+        position: relative;
+        width: 1080px;  /* visual width */
+        height: 720px;  /* visual height */
+        image-rendering: pixelated;
+    }
+
+    .background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('/static/backgrounds/krisRoom.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center center;
+        image-rendering: pixelated;
+        z-index: 0;
+    }
+
+    .player {
+        position: absolute;
+        width: 28px;   /* player size in pixels */
+        height: 28px;
+        background-image: url('sprites/redsoul.png'); /* default player image */
+        background-size: contain;
+        background-repeat: no-repeat;
+        image-rendering: pixelated;
+        z-index: 1;
+    }
+</style>
+</head>
+<body onload="musicPlayer.playKrisRoom();">
+<div class="game-container">
+    <div class="background"></div>
+    <div class="player" id="player"></div>
+</div>
+
+<script>
+const playerDiv = document.getElementById('player');
+let pointerDown = false;
+let pointerPos = { x: player.x, y: player.y };
+let area = 1;
+let isMusicPlaying = false;
+
+class bgm_mus {
+    constructor() {
+        // store the audio instance in the class
+        this.dess = new Audio('/static/music/dessdark.ogg');
+        this.dess.volume = 1.0; // max is 1.0
+        this.dess.loop = true;
+    }
+
+    playKrisRoom() {
+        // check area and if music is already playing
+        if (area === 1 && !isMusicPlaying) {
+            this.dess.play();
+            isMusicPlaying = true;
+        }
+    }
+
+    stopMusic() {
+        this.dess.pause();
+        this.dess.currentTime = 0;
+        isMusicPlaying = false;
+    }
+}
+
+// Create an instance of the class
+const musicPlayer = new bgm_mus();
+
+// Play the music
+
+// Initial player position
+let player = { x: 158, y: 144, speed: 1 };
+
+// Keyboard input
+const keys = {};
+window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; });
+window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+// Function to change player image dynamically
+function changePlayerImage(newSrc) {
+    playerDiv.style.backgroundImage = `url('${newSrc}')`;
+}
+
+canvas.addEventListener("pointerdown", e => {
+  pointerDown = true;
+  pointerPos.x = e.clientX;
+  pointerPos.y = e.clientY;
+  canvas.setPointerCapture(e.pointerId);
+});
+
+canvas.addEventListener("pointerup", e => {
+  pointerDown = false;
+  canvas.releasePointerCapture(e.pointerId);
+});
+
+canvas.addEventListener("pointermove", e => {
+  if (pointerDown) {
+    pointerPos.x = e.clientX;
+    pointerPos.y = e.clientY;
+  }
+});
+
+// Game loop to move player
+function gameLoop() {
+  musicPlayer.playKrisRoom();
+  if (pointerDown) {
+    const dx = pointerPos.x - (player.x + player.size / 2);
+    const dy = pointerPos.y - (player.y + player.size / 2);
+
+    player.x += Math.sign(dx) * Math.min(Math.abs(dx), player.speed);
+    player.y += Math.sign(dy) * Math.min(Math.abs(dy), player.speed);
+  }
+
+    // Keep player inside container (scaled visually)
+    player.x = Math.max(0, Math.min(320 - 20, player.x)); // logic coordinates
+    player.y = Math.max(0, Math.min(240 - 20, player.y));
+
+    // Scale logical coordinates to visual size
+    const scaleX = 1080 / 320;
+    const scaleY = 720 / 240;
+
+    playerDiv.style.left = `${player.x * scaleX}px`;
+    playerDiv.style.top = `${player.y * scaleY}px`;
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+// Start loop
+gameLoop();
+
+// Example: change player image immediately
+changePlayerImage('/static/sprites/red.png');
+
+window.onload = function() {
+    const navEntries = performance.getEntriesByType("navigation");
+    if (navEntries.length > 0 && navEntries[0].type === "reload") {
+        // Page was refreshed
+        window.location.href = "/templates/index.html"; // redirect on refresh
+    }
+};
+</script>
+</body>
+</html>
