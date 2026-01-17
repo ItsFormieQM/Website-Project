@@ -4,55 +4,82 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>probably undertale</title>
+
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; font-family:"DETERMINATION SANS", monospace; }
-  body { background:blue; color:white; overflow:hidden; }
-  canvas { display:block; image-rendering:pixelated; }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "DETERMINATION SANS", monospace;
+  }
+
+  body {
+    background: blue;
+    color: white;
+    overflow: hidden;
+  }
+
+  canvas {
+    display: block;
+    image-rendering: pixelated;
+    touch-action: none; /* IMPORTANT for mobile */
+  }
 </style>
 </head>
-<body>
 
+<body>
 <canvas id="gameCanvas"></canvas>
 
 <script>
 // ---------- CANVAS SETUP ----------
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
 // ---------- PLAYER SETUP ----------
 const player = {
-  x: canvas.width/2,
-  y: canvas.height/2,
+  x: canvas.width / 2,
+  y: canvas.height / 2,
   size: 32,
-  color: 'red',
+  color: "red",
   speed: 5
 };
 
-// ---------- INPUT ----------
+// ---------- KEYBOARD INPUT ----------
 const keys = {};
-window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
-// Mouse support
-let mouseDown = false;
-let mousePos = {x: player.x, y: player.y};
-
-canvas.addEventListener('mousedown', e => {
-  mouseDown = true;
-  mousePos.x = e.clientX;
-  mousePos.y = e.clientY;
+window.addEventListener("keydown", e => {
+  keys[e.key.toLowerCase()] = true;
+});
+window.addEventListener("keyup", e => {
+  keys[e.key.toLowerCase()] = false;
 });
 
-canvas.addEventListener('mouseup', () => {
-  mouseDown = false;
+// ---------- POINTER INPUT (MOUSE + TOUCH) ----------
+let pointerDown = false;
+let pointerPos = { x: player.x, y: player.y };
+
+canvas.addEventListener("pointerdown", e => {
+  pointerDown = true;
+  pointerPos.x = e.clientX;
+  pointerPos.y = e.clientY;
+  canvas.setPointerCapture(e.pointerId);
 });
 
-canvas.addEventListener('mousemove', e => {
-  if(mouseDown){
-    mousePos.x = e.clientX;
-    mousePos.y = e.clientY;
+canvas.addEventListener("pointerup", e => {
+  pointerDown = false;
+  canvas.releasePointerCapture(e.pointerId);
+});
+
+canvas.addEventListener("pointermove", e => {
+  if (pointerDown) {
+    pointerPos.x = e.clientX;
+    pointerPos.y = e.clientY;
   }
 });
 
@@ -60,25 +87,22 @@ canvas.addEventListener('mousemove', e => {
 function gameLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Keyboard movement
-  if(keys['w']) player.y -= player.speed;
-  if(keys['s']) player.y += player.speed;
-  if(keys['a']) player.x -= player.speed;
-  if(keys['d']) player.x += player.speed;
+  // Keyboard movement (WASD)
 
-  // Mouse movement (move towards mouse when pressed)
-  if(mouseDown){
-    const dx = mousePos.x - (player.x + player.size/2);
-    const dy = mousePos.y - (player.y + player.size/2);
+  // Pointer movement (drag toward touch/mouse)
+  if (pointerDown) {
+    const dx = pointerPos.x - (player.x + player.size / 2);
+    const dy = pointerPos.y - (player.y + player.size / 2);
+
     player.x += Math.sign(dx) * Math.min(Math.abs(dx), player.speed);
     player.y += Math.sign(dy) * Math.min(Math.abs(dy), player.speed);
   }
 
-  // Keep player in bounds
+  // Keep player inside screen
   player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
   player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
 
-  // Draw player
+  // Draw player (red soul placeholder)
   ctx.fillStyle = player.color;
   ctx.fillRect(player.x, player.y, player.size, player.size);
 
@@ -86,13 +110,6 @@ function gameLoop() {
 }
 
 gameLoop();
-
-// ---------- RESIZE ----------
-window.addEventListener('resize', () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-});
 </script>
-
 </body>
 </html>
