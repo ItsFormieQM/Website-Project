@@ -90,7 +90,7 @@
   </style>
 </head>
 
-<body>
+<body onload="playMenuMUS()">
 
   <!-- LOADING SCREEN -->
   <div id="loading-screen" class="dialogue">
@@ -100,7 +100,7 @@
   <!-- INTRO SCREEN -->
   <div id="intro-screen" class="dialogue" style="display:none;">
     <p id="intro-text" class="twitch">Are you sure that you want to continue?</p>
-    <button id="continue-btn" onclick="playMenuMUS(); playMenuSelectSFX();">CONTINUE</button>
+    <button id="continue-btn" onclick="playMenuSelectSFX(); playMenuMUS();">CONTINUE</button>
   </div>
 
   <!-- PLATFORM SELECTOR -->
@@ -122,8 +122,10 @@
   </div>
 
   <script>
+    let isMusicPlaying = false;
     // ===== LOADING SCREEN =====
     window.addEventListener("load", () => {
+      playMenuMUS();
       document.getElementById("loading-screen").style.display = "none";
       document.getElementById("intro-screen").style.display = "block";
       startTwitch("intro-text");
@@ -196,7 +198,10 @@
       let mus = new Audio("/static/music/menu.ogg");
       mus.volume = 1;
       mus.loop = true;
-      mus.play();
+      if(!isMusicPlaying) {
+        mus.play();
+        isMusicPlaying = true;
+      }
     }
 
     // Play SFX on hover for choices
@@ -217,17 +222,27 @@ async function goToPlatform(platform) {
 
   localStorage.setItem("platform", platform);
 
-  if (platform === 'pc') {
-    window.location.href = "/templates/pc.html";
-  } else if (platform === 'mobile') {
-    window.location.href = "/templatles/mobile.html";
+      if (platform === 'pc') {
+        window.location.href = "/static/areas/pc.html";  // now it works!
+    } else {
+        window.location.href = "/static/areas/mobile.html";
+    }
 
-  }
 }
     function resetPlatform() {
       localStorage.removeItem("platform");
       location.reload();
     }
+
+    window.onload = function() {
+    const navEntries = performance.getEntriesByType("navigation");
+    if (navEntries.length > 0 && navEntries[0].type === "reload") {
+        // Page was refreshed
+        window.location.href = "/templates/index.html"; // redirect on refresh
+        playMenuMUS();
+        isMusicPlaying = true;
+    }
+};
 
   </script>
 </body>

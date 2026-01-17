@@ -2,17 +2,17 @@ from flask import Flask, render_template
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route('/')
 def home():
-    return render_template("index.html")
+    return render_template('index.html')  # page with your JS
 
-@app.route("/pc")
+@app.route('/pc')
 def pc():
-    return render_template("pc.html")
+    return render_template('pc.html')
 
-@app.route("/mobile")
+@app.route('/mobile')
 def mobile():
-    return render_template("mobile.html")
+    return render_template('mobile.html')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
