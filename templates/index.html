@@ -103,8 +103,8 @@
 
 <!-- INTRO SCREEN (hidden initially) -->
 <div id="intro-screen" class="dialogue" style="display:none;">
-  <p>* Welcome to the game!</p>
-  <button id="continue-btn">* CONTINUE *</button>
+  <p>* Are you sure you want to continue?</p>
+  <button id="continue-btn">CONTINUE</button>
 </div>
 
 <!-- PLATFORM SELECTOR (hidden initially) -->
@@ -113,14 +113,15 @@
   <p>* Please choose the platform you are using:</p>
 
   <div class="choices">
-    <div class="choice" onclick="setPlatform('pc')">
-      <img class="pointer" src="/static/sprites/redsoul.png" alt="pointer">
-      PC
-    </div>
-    <div class="choice" onclick="setPlatform('mobile')">
-      <img class="pointer" src="/static/sprites/redsoul.png" alt="pointer">
-      MOBILE
-    </div>
+  <div class="choice" onclick="setPlatform('pc'); showPCContent();">
+    <img class="pointer" src="/static/sprites/redsoul.png" alt="pointer">
+    PC
+  </div>
+  <div class="choice" onclick="window.location.href='/templates/areas/area1/Mobile/mobile.html'">
+    <img class="pointer" src="/static/sprites/redsoul.png" alt="pointer">
+    MOBILE
+  </div>
+</div>
   </div>
 </div>
 
@@ -208,6 +209,20 @@ choices.forEach(choice => {
       localStorage.removeItem("platform");
       location.reload();
     }
+
+function goToPlatform(platform) {
+    localStorage.setItem("platform", platform); // optional, save selection
+
+    if(platform === 'pc') {
+        // stay on current page or load PC-specific content
+        document.body.classList.add('pc');
+        document.getElementById('platform-selector').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+    } else if(platform === 'mobile') {
+        // go to a separate HTML file for mobile
+        window.location.href = "/templates/areas/area1/Mobile/mobile.html"; // <-- path to your mobile page
+    }
+}
   </script>
 
 </body>
