@@ -79,6 +79,15 @@
       text-align: center;
     }
 
+    #twitch-text {
+      font-family: 'Arial', sans-serif;
+      font-size: 48px;
+      font-weight: bold;
+      display: inline-block;
+      color: white;
+      text-shadow: 2px 2px 0 black;
+    }
+
     body.pc #content,
     body.mobile #content {
       display: block;
@@ -139,6 +148,19 @@
 const continueBtn = document.getElementById("continue-btn");
 const introScreen = document.getElementById("intro-screen");
 const platformSelector = document.getElementById("platform-selector");
+
+const text = document.getElementById('twitch-text');
+
+function twitchText() {
+    const maxOffset = 3; // how far it wiggles in pixels
+    const offsetX = Math.floor(Math.random() * (maxOffset * 2 + 1)) - maxOffset;
+    const offsetY = Math.floor(Math.random() * (maxOffset * 2 + 1)) - maxOffset;
+
+    text.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+}
+
+// Update every 50ms for fast twitch
+setInterval(twitchText, 50);
 
 continueBtn.addEventListener("click", () => {
   // Hide intro screen
