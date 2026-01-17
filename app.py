@@ -2,9 +2,17 @@ from flask import Flask, render_template
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route('/')
 def home():
-    return render_template("index.html")
+    return render_template('home.html')
 
-if __name__ == "__main__":
+@app.route('/')
+def pc():
+    return render_template('pc.html')
+
+@app.route('/')
+def mobile():
+    return render_template('mobile.html')
+
+if __name__ == '__main__':
     app.run(debug=True)
