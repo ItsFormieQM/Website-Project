@@ -11,7 +11,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: "Papyrus", monospace;
+      font-family: "Determination Sans";
       image-rendering: pixelated;
     }
 
@@ -79,13 +79,9 @@
       text-align: center;
     }
 
-    #twitch-text {
-      font-family: 'Arial', sans-serif;
-      font-size: 48px;
-      font-weight: bold;
+    #twitch-text span {
       display: inline-block;
-      color: white;
-      text-shadow: 2px 2px 0 black;
+      transition: transform 0.05s; /* smooth twitch */
     }
 
     body.pc #content,
@@ -112,27 +108,27 @@
 
 <!-- INTRO SCREEN (hidden initially) -->
 <div id="intro-screen" class="dialogue" style="display:none;">
-  <p>* Are you sure you want to continue?</p>
+  <p id="twitch-text">Are you sure that you want to continue?</p>
   <button id="continue-btn">CONTINUE</button>
 </div>
 
 <!-- PLATFORM SELECTOR (hidden initially) -->
 <div id="platform-selector" class="dialogue" style="display:none;">
-  <p>* Before you continue.</p>
-  <p>* Please choose the platform you are using:</p>
+  <p id="twitch-text">* Before you continue.</p>
+  <p id="twitch-text">* Please choose the platform you are using:</p>
 
   <div class="choices">
-  <div class="choice" onclick="window.location.href='pc.html'">
-    <img class="pointer" src="/static/sprites/redsoul.png" alt="pointer">
+  <div class="choice" onclick="window.location.href='{{ url_for('pc') }}'">
+    <img class="pointer" src="{{ url_for('static', filename='sprites/redsoul.png') }}" alt="pointer">
     PC
   </div>
-  <div class="choice" onclick="window.location.href='mobile.html'">
-    <img class="pointer" src="/static/sprites/redsoul.png" alt="pointer">
+
+  <div class="choice" onclick="window.location.href='{{ url_for('mobile') }}'">
+    <img class="pointer" src="{{ url_for('static', filename='sprites/redsoul.png') }}" alt="pointer">
     MOBILE
   </div>
 </div>
-  </div>
-</div>
+
 
 
 
@@ -149,18 +145,30 @@ const continueBtn = document.getElementById("continue-btn");
 const introScreen = document.getElementById("intro-screen");
 const platformSelector = document.getElementById("platform-selector");
 
-const text = document.getElementById('twitch-text');
+const textElement = document.getElementById('twitch-text');
+const text = textElement.textContent;
+textElement.textContent = ''; // clear original text
 
-function twitchText() {
-    const maxOffset = 3; // how far it wiggles in pixels
-    const offsetX = Math.floor(Math.random() * (maxOffset * 2 + 1)) - maxOffset;
-    const offsetY = Math.floor(Math.random() * (maxOffset * 2 + 1)) - maxOffset;
-
-    text.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+// wrap each character in a span
+for (let char of text) {
+    const span = document.createElement('span');
+    span.textContent = char;
+    textElement.appendChild(span);
 }
 
-// Update every 50ms for fast twitch
-setInterval(twitchText, 50);
+const letters = textElement.querySelectorAll('span');
+
+function twitchLetters() {
+    letters.forEach(span => {
+        const maxOffset = 1.2; // pixels of twitch
+        const x = Math.floor(Math.random() * (maxOffset * 2 + 1)) - maxOffset;
+        const y = Math.floor(Math.random() * (maxOffset * 2 + 1)) - maxOffset;
+        span.style.transform = `translate(${x}px, ${y}px)`;
+    });
+}
+
+// update every 50ms for fast twitch
+setInterval(twitchLetters, 50);
 
 continueBtn.addEventListener("click", () => {
   // Hide intro screen
