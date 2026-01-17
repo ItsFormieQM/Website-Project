@@ -1,297 +1,198 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Shop Game</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            font-family: sans-serif;
-        }
+  <meta charset="UTF-8" />
+  <title>The Beginning.</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        #game-area {
-            width: 800px;
-            height: 600px;
-            margin: 0 auto;
-            position: relative;
-            background-color: #cfcfcf;
-            border: 2px solid #000;
-        }
+  <style>
+    /* ===== UNDERTALE CORE ===== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "DETERMINATION SANS", monospace;
+      image-rendering: pixelated;
+    }
 
-        /* Player for first area (blue square) */
-        #player {
-            width: 50px;
-            height: 50px;
-            background-color: blue;
-            position: absolute;
-            top: 275px;
-            left: 375px;
-        }
+    body {
+      background: black;
+      color: white;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        /* Player PNG for second area */
-        #player-img {
-            width: 50px;
-            height: 50px;
-            position: absolute;
-            display: none;
-        }
+    /* ===== DIALOG BOX ===== */
+    #platform-selector {
+      position: fixed;
+      inset: 0;
+      background: black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        .shop-item {
-            width: 50px;
-            height: 50px;
-            background-color: red;
-            position: absolute;
-        }
+    .dialogue {
+      width: 90%;
+      max-width: 600px;
+      border: 4px solid white;
+      padding: 24px;
+      font-size: 18px;
+    }
 
-        #continue-btn, #return-btn {
-            margin: 10px auto;
-            display: block;
-            padding: 10px 20px;
-            font-size: 16px;
-        }
-    </style>
+    .dialogue p {
+      margin-bottom: 20px;
+    }
+
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .choice {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px; /* space between pointer and text */
+      padding: 4px 0;
+    }
+
+    /* Pointer image hidden by default */
+    .choice .pointer {
+      width: 16px;
+      height: 16px;
+      image-rendering: pixelated;
+      visibility: hidden;
+    }
+
+    /* Show pointer on hover */
+    .choice:hover .pointer {
+      visibility: visible;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    #content {
+      display: none;
+      text-align: center;
+    }
+
+    body.pc #content,
+    body.mobile #content {
+      display: block;
+    }
+
+    body.pc #platform-selector,
+    body.mobile #platform-selector {
+      display: none;
+    }
+  </style>
 </head>
+
 <body>
 
-<h1 style="text-align:center;">Shop Game</h1>
-
-<button id="continue-btn">Continue</button>
-<button id="return-btn" style="display:none;">Return to previous area</button>
-
-<div id="game-area">
-    <!-- First area -->
-    <div id="player"></div>
-    <div class="shop-item" style="top:100px; left:100px;"></div>
-    <div class="shop-item" style="top:400px; left:600px;"></div>
-
-    <!-- Second area -->
-    <img id="player-img" src="images/player.png"> <!-- PNG from workspace -->
+  <!-- UNDERTALE DIALOG -->
+<!-- INTRO SCREEN -->
+<!-- INTRO SCREEN -->
+<div id="intro-screen" class="dialogue">
+  <p>* Welcome to the game!</p>
+  <button id="continue-btn">* CONTINUE *</button>
 </div>
 
-<script>
+<!-- PLATFORM SELECTOR (hidden initially) -->
+<div id="platform-selector" class="dialogue" style="display:none;">
+  <p>* Before you continue.</p>
+  <p>* Please choose the platform you are using:</p>
 
-const gameArea = document.getElementById("game-area");
-const player = document.getElementById("player");
-const playerImg = document.getElementById("player-img");
+  <div class="choices">
+    <div class="choice" onclick="setPlatform('pc')">
+      <img class="pointer" src="/static/sprites/redsoul.png" alt="pointer">
+      PC
+    </div>
+    <div class="choice" onclick="setPlatform('mobile')">
+      <img class="pointer" src="/static/sprites/redsoul.png" alt="pointer">
+      MOBILE
+    </div>
+  </div>
+</div>
+
+
+  <!-- MAIN CONTENT -->
+  <div id="content">
+    <h1>* Welcome.</h1>
+    <p>* Your journey begins.</p>
+    <br>
+    <button onclick="resetPlatform()">RESET</button>
+  </div>
+
+ <script>
 const continueBtn = document.getElementById("continue-btn");
-const returnBtn = document.getElementById("return-btn");
+const introScreen = document.getElementById("intro-screen");
+const platformSelector = document.getElementById("platform-selector");
 
-// Player position
-let posX = 375;
-let posY = 275;
-let speed = 3.5;
-let isMusicPlaying = false;
-
-// Current area: 1 = first, 2 = second
-let currentArea = 1;
-
-
-// Track keys pressed
-let keysPressed = {};
-let audio = new Audio('/static/music/shop1.ogg'); 
-let area1 = new Audio('/static/music/area1.ogg')
-// Area 2 music
-
-
-// Key events
-document.addEventListener("keydown", (e) => {
-    keysPressed[e.key.toLowerCase()] = true;
-});
-
-document.addEventListener("keyup", (e) => {
-    keysPressed[e.key.toLowerCase()] = false;
-});
-
-// Update buttons visibility
-function musicPlayer() { 
-    if(currentArea === 1) {
-        area1.loop = true;
-        area1.volume = 0.7;
-        area1.play()
-        isMusicPlaying = true;
-    }
-    else if(currentArea !== 1) {
-        area1.volume = 0;
-        area1.pause();
-        isMusicPlaying = false;
-        area1.currentTime = 0;
-    }
-    if(currentArea === 2) { 
-        audio.loop = true; // Loop indefinitely 
-        audio.volume = 0.5; // Set volume (0.0 to 1.0) 
-        audio.play(); 
-        isMusicPlaying = true; 
-    }
-    else if(currentArea !== 2) {
-        audio.volume = 0;
-        audio.pause();
-        isMusicPlaying = false;      // stops playback
-        audio.currentTime = 0;
-    } 
-}
-
-function updateButtons() {
-    if(currentArea === 1) {
-        continueBtn.style.display = "block";
-        returnBtn.style.display = "none";
-    } else {
-        continueBtn.style.display = "none";
-        returnBtn.style.display = "block";
-    }
-}
-
-let joystickPosX = 0;
-let joystickPosY = 0;
-
-const thumb = document.getElementById("joystick-thumb");
-const container = document.getElementById("joystick-container");
-
-container.addEventListener("touchmove", (e) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const rect = container.getBoundingClientRect();
-
-    // Calculate relative position inside container
-    let x = touch.clientX - rect.left - rect.width/2;
-    let y = touch.clientY - rect.top - rect.height/2;
-
-    // Clamp to joystick radius
-    const maxRadius = rect.width/2 - thumb.offsetWidth/2;
-    const angle = Math.atan2(y, x);
-    const distance = Math.min(maxRadius, Math.hypot(x, y));
-    x = distance * Math.cos(angle);
-    y = distance * Math.sin(angle);
-
-    // Move thumb
-    thumb.style.left = `${rect.width/2 - thumb.offsetWidth/2 + x}px`;
-    thumb.style.top = `${rect.height/2 - thumb.offsetHeight/2 + y}px`;
-
-    joystickPosX = x / maxRadius; // normalized -1 to 1
-    joystickPosY = y / maxRadius; // normalized -1 to 1
-});
-
-container.addEventListener("touchend", () => {
-    // Reset thumb and movement
-    joystickPosX = 0;
-    joystickPosY = 0;
-    thumb.style.left = "50px";
-    thumb.style.top = "50px";
-});
-
-// Move player
-
-function gameLoop() {
-    if(!isMobile) {
-        // WASD movement for desktop
-        if(keysPressed["w"]) posY -= speed;
-        if(keysPressed["s"]) posY += speed;
-        if(keysPressed["a"]) posX -= speed;
-        if(keysPressed["d"]) posX += speed;
-    } else {
-        // Mobile joystick movement
-        posX += joystickPosX * speed;
-        posY += joystickPosY * speed;
-    }
-
-    // Keep inside game area
-    posX = Math.max(0, Math.min(gameArea.clientWidth - 50, posX));
-    posY = Math.max(0, Math.min(gameArea.clientHeight - 50, posY));
-
-    // Update player
-    if(currentArea === 1) {
-        player.style.left = posX + "px";
-        player.style.top = posY + "px";
-    } else {
-        playerImg.style.left = posX + "px";
-        playerImg.style.top = posY + "px";
-    }
-
-    requestAnimationFrame(gameLoop);
-}
-
-function movePlayer() {
-    if(keysPressed["w"]) posY -= speed;
-    if(keysPressed["s"]) posY += speed;
-    if(keysPressed["a"]) posX -= speed;
-    if(keysPressed["d"]) posX += speed;
-
-    // Keep player inside game area
-    posX = Math.max(0, Math.min(gameArea.clientWidth - 50, posX));
-    posY = Math.max(0, Math.min(gameArea.clientHeight - 50, posY));
-
-    if(currentArea === 1){
-        speed = 5;
-        player.style.left = posX + "px";
-        player.style.top = posY + "px";
-    } else if(currentArea === 2){
-        if(!isMusicPlaying) {
-            musicPlayer();
-        }
-        speed = 2.5;
-        playerImg.style.left = posX + "px";
-        playerImg.style.top = posY + "px";
-
-        // Play music once
-        if(!isMusicPlaying){
-            area2Music.play();
-            isMusicPlaying = true;
-        }
-    }
-
-    updateButtons();
-    requestAnimationFrame(movePlayer);
-}
-
-// Start movement loop
-musicPlayer();
-gameLoop();
-
-// Continue button click → go to Area 2
 continueBtn.addEventListener("click", () => {
-    player.style.display = "none";
-    playerImg.style.display = "block";
+  // Hide intro screen
+  introScreen.style.display = "none";
 
-    posX = 100;
-    posY = 100;
-    playerImg.style.left = posX + "px";
-    playerImg.style.top = posY + "px";
+  // Show platform selector
+  platformSelector.style.display = "block";
 
-    gameArea.style.backgroundColor = "#aaffaa";
-    currentArea = 2;
-
-    updateButtons();
+  // Optional: play menu music now
+  playMenuMUS();
 });
 
-// Return button click → go back to Area 1
-returnBtn.addEventListener("click", () => {
-    if(currentArea !== 1){
-         // resets to the start
-         document.querySelectorAll("audio").forEach(aud => {
-        aud.pause();
-        aud.currentTime = 0;
-    });
 
-        player.style.display = "block";
-        playerImg.style.display = "none";
+let area = 1;
 
-        posX = 375;
-        posY = 275;
-        player.style.left = posX + "px";
-        player.style.top = posY + "px";
+function playMenuMoveSFX() {
+    let menuMvSFX = new Audio("/static/sfx/snd_menumove.wav");
+    menuMvSFX.volume = 0.7;
+    menuMvSFX.loop = false;
+    menuMvSFX.play();
+}
 
-        gameArea.style.backgroundColor = "#cfcfcf";
-        currentArea = 1;
+function playMenuMUS() {
+    let menuMUS = new Audio("/static/music/menu.ogg");
+    menuMUS.volume = 1;
+    menuMUS.loop = true;
+    menuMUS.play();
+}
 
-        // Stop Area 2 music
-        musicPlayer();
-        isMusicPlaying = false;
 
-        updateButtons();
+
+const choices = document.querySelectorAll(".choice");
+
+choices.forEach(choice => {
+  choice.addEventListener("mouseenter", () => {
+    const pointer = choice.querySelector(".pointer");
+    if (!pointer) return;
+
+    const style = window.getComputedStyle(pointer);
+
+    if (style.visibility === "visible") {
+      playMenuMoveSFX(); // Calls your external function
     }
+  });
 });
 
+    const saved = localStorage.getItem("platform");
 
-</script>
+    if (saved) {
+      document.body.classList.add(saved);
+    }
+
+    function setPlatform(platform) {
+      localStorage.setItem("platform", platform);
+      document.body.classList.add(platform);
+    }
+
+    function resetPlatform() {
+      localStorage.removeItem("platform");
+      location.reload();
+    }
+  </script>
 
 </body>
 </html>
