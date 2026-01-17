@@ -1,9 +1,11 @@
 @echo off
 setlocal
 
-git add .
-git commit -m "Auto commit" 2>nul
-git push origin main
+FOR /F "delims=" %%b IN ('git branch --show-current') DO set BRANCH=%%b
 
-echo Code pushed to GitHub.
+git add .
+git commit -m "Force auto commit" 2>nul
+git push origin %BRANCH% --force
+
+echo Force pushed to GitHub (%BRANCH%).
 pause
