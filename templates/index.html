@@ -11,7 +11,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: "DETERMINATION SANS", monospace;
+      font-family: "Papyrus", monospace;
       image-rendering: pixelated;
     }
 
@@ -113,11 +113,11 @@
   <p>* Please choose the platform you are using:</p>
 
   <div class="choices">
-  <div class="choice" onclick="setPlatform('pc'); showPCContent();">
+  <div class="choice" onclick="window.location.href='pc.html'">
     <img class="pointer" src="/static/sprites/redsoul.png" alt="pointer">
     PC
   </div>
-  <div class="choice" onclick="window.location.href='/templates/areas/area1/Mobile/mobile.html'">
+  <div class="choice" onclick="window.location.href='mobile.html'">
     <img class="pointer" src="/static/sprites/redsoul.png" alt="pointer">
     MOBILE
   </div>
@@ -220,7 +220,7 @@ function goToPlatform(platform) {
         document.getElementById('content').style.display = 'block';
     } else if(platform === 'mobile') {
         // go to a separate HTML file for mobile
-        window.location.href = "templates/areas/area1/Mobile/mobile.html"; // <-- path to your mobile page
+        window.location.href = "mobile.html"; // <-- path to your mobile page
     }
 }
   </script>
