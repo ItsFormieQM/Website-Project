@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>The Beginning.</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    /* ===== UNDERTALE CORE ===== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Determination Sans", sans-serif;
+      image-rendering: pixelated;
+    }
+
+    body {
+      background: black;
+      color: white;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ===== DIALOG BOX ===== */
+    .dialogue {
+      width: 90%;
+      max-width: 600px;
+      border: 4px solid white;
+      padding: 24px;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .dialogue p {
+      margin-bottom: 20px;
+    }
+
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .choice {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+      transition: color 0.1s;
+    }
+
+    .choice:hover {
+      color: yellow;
+    }
+
+    .pointer {
+      width: 16px;
+      height: 16px;
+      image-rendering: pixelated;
+      display: inline-block;
+    }
+
+    /* Twitch effect for individual letters */
+    .twitch span {
+      display: inline-block;
+      transition: transform 0.05s;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    #content {
+      display: none;
+      text-align: center;
+    }
+
+    body.pc #content,
+    body.mobile #content {
+      display: block;
+    }
+
+    body.pc #platform-selector,
+    body.mobile #platform-selector {
+      display: none;
+    }
+
+  </style>
+</head>
+
+<body onload="playMenuMUS()">
+
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen" class="dialogue">
+    <p>* Loading… please wait.</p>
+  </div>
+
+  <!-- INTRO SCREEN -->
+  <div id="intro-screen" class="dialogue" style="display:none;">
+    <p id="intro-text" class="twitch">Are you sure that you want to continue?</p>
+    <button id="continue-btn" onclick="playMenuSelectSFX(); playMenuMUS();">CONTINUE</button>
+  </div>
+
+  <!-- PLATFORM SELECTOR -->
+  <div id="platform-selector" class="dialogue" style="display:none;">
+    <p>* Before you continue.</p>
+    <p>* Please choose the platform you are using:</p>
+
+    <div class="choices">
+      <div class="choice twitch" onclick="goToPlatform('pc')">
+        <img class="pointer" src="{{ url_for('static', filename='sprites/redsoul.png') }}" alt="pointer" width="16" height="16">
+        PC
+      </div>
+
+      <div class="choice twitch" onclick="goToPlatform('mobile')">
+        <img class="pointer" src="{{ url_for('static', filename='sprites/redsoul.png') }}" alt="pointer" width="16" height="16">
+        MOBILE
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let isMusicPlaying = false;
+    // ===== LOADING SCREEN =====
+    window.addEventListener("load", () => {
+      playMenuMUS();
+      document.getElementById("loading-screen").style.display = "none";
+      document.getElementById("intro-screen").style.display = "block";
+      startTwitch("intro-text");
+    });
+
+    // ===== TWITCH EFFECT =====
+    function startTwitch(elementId) {
+      const el = document.getElementById(elementId) || document.querySelector(`#${elementId}`);
+      if (!el) return;
+
+      // Wrap each character in a span
+      const text = el.textContent;
+      el.textContent = '';
+      for (let char of text) {
+        const span = document.createElement('span');
+        span.textContent = char;
+        el.appendChild(span);
+      }
+
+      const letters = el.querySelectorAll('span');
+      setInterval(() => {
+        letters.forEach(span => {
+          const x = Math.floor(Math.random() * 3) - 1;
+          const y = Math.floor(Math.random() * 3) - 1;
+          span.style.transform = `translate(${x}px, ${y}px)`;
+        });
+      }, 50);
+    }
+
+    // Apply twitch to all elements with class 'twitch' (platform buttons)
+    document.querySelectorAll(".twitch").forEach(el => {
+      // Wrap each character in a span
+      const text = el.textContent;
+      el.textContent = '';
+      for (let char of text) {
+        const span = document.createElement('span');
+        span.textContent = char;
+        el.appendChild(span);
+      }
+      const letters = el.querySelectorAll('span');
+      setInterval(() => {
+        letters.forEach(span => {
+          const x = Math.floor(Math.random() * 3) - 1;
+          const y = Math.floor(Math.random() * 3) - 1;
+          span.style.transform = `translate(${x}px, ${y}px)`;
+        });
+      }, 50);
+    });
+
+    // ===== CONTINUE BUTTON =====
+    document.getElementById("continue-btn").addEventListener("click", () => {
+      document.getElementById("intro-screen").style.display = "none";
+      document.getElementById("platform-selector").style.display = "block";
+      playMenuMoveSFX();
+    });
+
+    // ===== SOUND =====
+    function playMenuMoveSFX() {
+      let sfx = new Audio("/static/sfx/snd_menumove.wav");
+      sfx.volume = 0.7;
+      sfx.play();
+    }
+
+    function playMenuSelectSFX() {
+      let select = new Audio("/static/sfx/snd_select.wav");
+      select.volume = 1;
+      select.play();
+    }
+    function playMenuMUS() {
+      let mus = new Audio("/static/music/menu.ogg");
+      mus.volume = 1;
+      mus.loop = true;
+      if(!isMusicPlaying) {
+        mus.play();
+        isMusicPlaying = true;
+      }
+    }
+
+    // Play SFX on hover for choices
+    document.querySelectorAll(".choice").forEach(choice => {
+      choice.addEventListener("mouseenter", playMenuMoveSFX);
+    });
+
+    // ===== PLATFORM LOGIC =====
+    const saved = localStorage.getItem("platform");
+    function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function goToPlatform(platform) {
+  playMenuSelectSFX();
+
+  await sleep(200); // 200 milliseconds = 0.2 seconds
+
+  localStorage.setItem("platform", platform);
+
+      if (platform === 'pc') {
+        window.location.href = "/static/areas/pc.html";  // now it works!
+    } else {
+        window.location.href = "/static/areas/mobile.html";
+    }
+
+}
+    function resetPlatform() {
+      localStorage.removeItem("platform");
+      location.reload();
+    }
+
+    window.onload = function() {
+    const navEntries = performance.getEntriesByType("navigation");
+    if (navEntries.length > 0 && navEntries[0].type === "reload") {
+        // Page was refreshed
+        window.location.href = "/static/areas/redirect.html"; // redirect on refresh
+        playMenuMUS();
+        isMusicPlaying = true;
+    }
+};
+
+  </script>
+</body>
+</html>

@@ -1,175 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deltarune?</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Deltarune?</title>
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "DETERMINATION SANS", monospace;
-    }
-
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: black;
-      overflow: hidden;
-    }
-
-    .game-container {
-      position: relative;
-      width: 1080px;
-      height: 720px;
-      image-rendering: pixelated;
-      touch-action: none;
-    }
-
-    .background {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background-image: url('/static/backgrounds/krisRoom.png');
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      image-rendering: pixelated;
-      z-index: 0;
-    }
-
-    .player {
-      position: absolute;
-      width: 28px;
-      height: 28px;
-      background-image: url('/static/sprites/red.png');
-      background-size: contain;
-      background-repeat: no-repeat;
-      image-rendering: pixelated;
-      z-index: 1;
-      pointer-events: none;
-    }
-  </style>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"DETERMINATION SANS", monospace; }
+  body {
+    display:flex; justify-content:center; align-items:center;
+    height:100vh; background-color:black; overflow:hidden;
+  }
+  .game-container {
+    position:relative; width:1080px; height:720px; image-rendering:pixelated;
+    touch-action:none;
+  }
+  .background {
+    position:absolute; width:100%; height:100%;
+    background-image:url('/static/backgrounds/krisRoom.png');
+    background-size:contain; background-repeat:no-repeat; background-position:center;
+    image-rendering:pixelated; z-index:0;
+  }
+  .player {
+    position:absolute; width:28px; height:28px;
+    background-image:url('/static/sprites/red.png');
+    background-size:contain; background-repeat:no-repeat;
+    image-rendering:pixelated; z-index:1; pointer-events:none;
+  }
+</style>
 </head>
 
 <body>
-  <div class="game-container" id="game">
-    <div class="background"></div>
-    <div class="player" id="player"></div>
-  </div>
+<div class="game-container" id="game">
+  <div class="background"></div>
+  <div class="player" id="player"></div>
+</div>
 
-  <script>
-    const game = document.getElementById("game");
-    const playerDiv = document.getElementById("player");
+<script>
+const game = document.getElementById("game");
+const playerDiv = document.getElementById("player");
 
-    const LOGICAL_WIDTH = 320;
-    const LOGICAL_HEIGHT = 240;
-    const scaleX = 1080 / LOGICAL_WIDTH;
-    const scaleY = 720 / LOGICAL_HEIGHT;
+// Logical resolution
+const LOGICAL_WIDTH = 320;
+const LOGICAL_HEIGHT = 240;
+const PLAYER_SIZE = 28;
+const SCALE_X = 1080 / LOGICAL_WIDTH;
+const SCALE_Y = 720 / LOGICAL_HEIGHT;
 
-    let area = 1;
-    let isMusicPlaying = false;
+let area = 1;
+let musicStarted = false;
 
-    class bgm_mus {
-      constructor() {
-        this.dess = new Audio('/static/music/dessdark.ogg');
-        this.dess.loop = true;
-        this.dess.volume = 1.0;
-      }
-
-      playKrisRoom() {
-        if (area === 1 && !isMusicPlaying) {
-          this.dess.play();
-          isMusicPlaying = true;
-        }
-      }
+// ---------- Music Class ----------
+class BGM {
+  constructor(src) {
+    this.audio = new Audio(src);
+    this.audio.loop = true;
+    this.audio.volume = 1.0;
+    this.audio.preload = "auto";
+  }
+  play() {
+    if (!musicStarted && area === 1) {
+      this.audio.play().catch(()=>{}); // silent fail
+      musicStarted = true;
     }
+  }
+}
 
-    const musicPlayer = new bgm_mus();
+const bgm = new BGM("/static/music/dessdark.ogg");
 
-    let player = {
-      x: 158,
-      y: 144,
-      speed: 1.5,
-      targetX: 158,
-      targetY: 144,
-      moving: false
-    };
+// ---------- Player ----------
+const player = { x:158, y:144, targetX:158, targetY:144, speed:1.5, moving:false };
 
-    function updateTarget(e) {
-      const rect = game.getBoundingClientRect();
-      const point = e.touches ? e.touches[0] : e;
+// Example barrier (in logical coordinates)
+const barriers = [
+  {x:100, y:80, width:40, height:20}
+];
 
-      player.targetX = Math.max(
-        0,
-        Math.min(LOGICAL_WIDTH - 20, (point.clientX - rect.left) / scaleX)
-      );
+function clamp(val,min,max){ return Math.max(min,Math.min(max,val)); }
 
-      player.targetY = Math.max(
-        0,
-        Math.min(LOGICAL_HEIGHT - 20, (point.clientY - rect.top) / scaleY)
-      );
+function updateTarget(e){
+  const rect = game.getBoundingClientRect();
+  const p = e.touches ? e.touches[0] : e;
+  player.targetX = clamp((p.clientX-rect.left)/SCALE_X,0,LOGICAL_WIDTH-PLAYER_SIZE);
+  player.targetY = clamp((p.clientY-rect.top)/SCALE_Y,0,LOGICAL_HEIGHT-PLAYER_SIZE);
+}
+
+// ---------- Input ----------
+function startMove(e){ bgm.play(); player.moving=true; updateTarget(e); }
+function move(e){ if(player.moving) updateTarget(e); }
+function stopMove(){ player.moving=false; }
+
+game.addEventListener("touchstart",startMove,{passive:true});
+game.addEventListener("touchmove",move,{passive:true});
+game.addEventListener("touchend",stopMove);
+game.addEventListener("mousedown",startMove);
+window.addEventListener("mousemove",move);
+window.addEventListener("mouseup",stopMove);
+
+// ---------- Debug Canvas ----------
+const debugCanvas = document.createElement("canvas");
+debugCanvas.width = 1080;
+debugCanvas.height = 720;
+debugCanvas.style.position = "absolute";
+debugCanvas.style.top = "0";
+debugCanvas.style.left = "0";
+debugCanvas.style.pointerEvents = "none";
+document.body.appendChild(debugCanvas);
+const dbg = debugCanvas.getContext("2d");
+
+function drawBarrier(){
+  dbg.clearRect(0,0,debugCanvas.width,debugCanvas.height);
+  dbg.strokeStyle = "red";
+  dbg.lineWidth = 2;
+  dbg.setLineDash([6,4]);
+  for(const b of barriers){
+    dbg.strokeRect(b.x*SCALE_X, b.y*SCALE_Y, b.width*SCALE_X, b.height*SCALE_Y);
+  }
+  dbg.setLineDash([]);
+}
+
+// ---------- Collision ----------
+function rectsOverlap(r1, r2){
+  return !(r1.x+r1.width <= r2.x || r1.x >= r2.x+r2.width || r1.y+r1.height <= r2.y || r1.y >= r2.y+r2.height);
+}
+
+function movePlayerWithCollision(player){
+  const dx = player.targetX - player.x;
+  const dy = player.targetY - player.y;
+  const dist = Math.hypot(dx, dy);
+  if(dist < 0.1) return; // close enough
+  const nx = player.x + dx/dist * player.speed;
+  const ny = player.y + dy/dist * player.speed;
+
+  // Check collision
+  const nextRect = {x:nx, y:ny, width:PLAYER_SIZE, height:PLAYER_SIZE};
+  for(const b of barriers){
+    if(rectsOverlap(nextRect, b)){
+      return; // block movement
     }
+  }
 
-    // Touch controls
-    game.addEventListener("touchstart", e => {
-      player.moving = true;
-      updateTarget(e);
-    });
+  // No collision
+  player.x = nx;
+  player.y = ny;
+}
 
-    game.addEventListener("touchmove", e => {
-      if (player.moving) updateTarget(e);
-    });
+// ---------- Game Loop ----------
+function gameLoop() {
+  movePlayerWithCollision(player);
 
-    game.addEventListener("touchend", () => {
-      player.moving = false;
-    });
+  playerDiv.style.left = `${player.x * SCALE_X}px`;
+  playerDiv.style.top = `${player.y * SCALE_Y}px`;
 
-    // Optional mouse support
-    game.addEventListener("mousedown", e => {
-      player.moving = true;
-      updateTarget(e);
-    });
+  drawBarrier();
 
-    window.addEventListener("mousemove", e => {
-      if (player.moving) updateTarget(e);
-    });
+  requestAnimationFrame(gameLoop);
+}
 
-    window.addEventListener("mouseup", () => {
-      player.moving = false;
-    });
+// Start
+gameLoop();
 
-    function gameLoop() {
-      musicPlayer.playKrisRoom();
-
-      if (player.moving) {
-        const dx = player.targetX - player.x;
-        const dy = player.targetY - player.y;
-        const dist = Math.hypot(dx, dy);
-
-        if (dist > 0.3) {
-          player.x += (dx / dist) * player.speed;
-          player.y += (dy / dist) * player.speed;
-        }
-      }
-
-      playerDiv.style.left = `${player.x * scaleX}px`;
-      playerDiv.style.top = `${player.y * scaleY}px`;
-
-      requestAnimationFrame(gameLoop);
+// Redirect on page refresh
+window.onload = function() {
+    const navEntries = performance.getEntriesByType("navigation");
+    if (navEntries.length > 0 && navEntries[0].type === "reload") {
+        // Page was refreshed
+        window.location.href = "/static/areas/redirect.html"; // redirect on refresh
+        playMenuMUS();
+        isMusicPlaying = true;
     }
-
-    gameLoop();
-
-    // Redirect on refresh
-    const nav = performance.getEntriesByType("navigation");
-    if (nav.length && nav[0].type === "reload") {
-      window.location.href = "/templates/index.html";
-    }
-  </script>
+};
+</script>
 </body>
 </html>
